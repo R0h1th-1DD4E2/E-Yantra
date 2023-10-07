@@ -27,6 +27,7 @@ thresh = cv2.dilate(thresh, None, iterations=4)
 labels = measure.label(thresh, connectivity=2, background=0)
 mask = np.zeros(thresh.shape, dtype="uint8")
 
+# loop over the unique components
 for label in np.unique(labels):
 
 # if this is the background label, ignore it
