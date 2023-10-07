@@ -43,12 +43,10 @@ for label in np.unique(labels):
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
 
-cv2.imshow("labelMask",labelMask)
-
 # Initialize lists to store centroid coordinates and area
 centroids = []
 areas = []
-
+cv2.waitKey(10)
 for i, j in enumerate(contours):
 
     # Calculate the area of the contour
@@ -57,8 +55,8 @@ for i, j in enumerate(contours):
     # Calculate the moments of the contour
     M = cv2.moments(j)
     # Append centroid coordinates and area to the respective lists
-    centroidx = int(M["m10"] / M["m00"])
-    centroidy = int(M["m01"] / M["m00"])
+    centroidx = float(M["m10"] / M["m00"])
+    centroidy = float(M["m01"] / M["m00"])
     centroids.append((centroidx, centroidy))
     areas.append(area)
 # Save the output image as a PNG file
@@ -74,3 +72,4 @@ with open("led_detection_results.txt", "w") as file:
         file.write(f"Centroid #{i + 1}: {centroid}\nArea #{i + 1}: {area}\n")
 # Close the text file
 file.close()
+cv2.waitKey(10)
