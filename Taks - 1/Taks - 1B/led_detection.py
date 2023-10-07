@@ -1,11 +1,34 @@
+'''
+# Team ID:          < eYRC#LD#1201 >
+# Theme:            < LD >
+# Author List:      < Rolwin , Rohtih (Documentation) >
+# Filename:         < led_detection.py >
+# Functions:        < frame_resize >
+# Global variables: < None >
+'''
+
 # import the necessary packages
 from imutils import contours
 from skimage import measure
 import numpy as np
-import imutils
+import imutils          #Not Utilized
 import cv2
 
 def frame_resize(frame, scale=.75):
+    """
+    Purpose:
+        Resize the input image.
+
+    Args:
+        frame (array): The input image.
+        scale (float, optional): Scaling factor (default is 0.75).
+
+    Returns:
+        array: The resized image.
+
+    Example call:
+        resized_frame = frame_resize(frame)
+    """
     height=int(frame.shape[0]*scale)
     width=int(frame.shape[1]*scale)
     dimensions=(width,height)
