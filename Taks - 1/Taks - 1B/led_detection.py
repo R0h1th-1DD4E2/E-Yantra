@@ -43,29 +43,30 @@ contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
 
 cv2.imshow("labelMask",labelMask)
-print(contours)
-cv2.waitKey(0)
+
 # Initialize lists to store centroid coordinates and area
 centroids = []
 areas = []
 
 for i, j in enumerate(contours):
-    print(i,j)
+
     # Calculate the area of the contour
     area = cv2.contourArea(j)
-    print(area)
-    # Draw the bright spot on the image
-
-
+    cv2.drawContours(image, [j], -1, (0, 255, 0), 2)
+    # Calculate the moments of the contour
+    M = cv2.moments(j)
     # Append centroid coordinates and area to the respective lists
-
+    centroidx = int(M["m10"] / M["m00"])
+    centroidy = int(M["m01"] / M["m00"])
+    centroids.append((centroidx, centroidy))
+    areas.append(area)
 # Save the output image as a PNG file
 cv2.imwrite("led_detection_results.png", image)
 
 # Open a text file for writing
 with open("led_detection_results.txt", "w") as file:
     # Write the number of LEDs detected to the file
-    file.write(f"No. of LEDs detected: {a}\n")
+    file.write(f"No. of LEDs detected: {len(contours)}\n")
     # Loop over the contours
     for i, (centroid, area) in enumerate(zip(centroids, areas)):
         # Write centroid coordinates and area for each LED to the file
