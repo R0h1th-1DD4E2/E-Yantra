@@ -46,7 +46,7 @@ contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
 # Initialize lists to store centroid coordinates and area
 centroids = []
 areas = []
-cv2.waitKey(10)
+
 for i, j in enumerate(contours):
 
     # Calculate the area of the contour
@@ -72,4 +72,3 @@ with open("led_detection_results.txt", "w") as file:
         file.write(f"Centroid #{i + 1}: {centroid}\nArea #{i + 1}: {area}\n")
 # Close the text file
 file.close()
-cv2.waitKey(10)
