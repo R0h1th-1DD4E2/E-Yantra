@@ -27,6 +27,9 @@ class SwiftDroneController():
         self.min_values = [1000, 1000, 1000]  # Minimum values for [pitch, roll, throttle]
         self.sample_time = 0.060  # Sample time for PID control (adjust as needed)
 
+        # Initialize variables for integral term
+        self.error_sum = [0.0, 0.0, 0.0]
+
         # Initialize the drone command
         self.cmd = swift_msgs()
         self.cmd.rcRoll = 1500
