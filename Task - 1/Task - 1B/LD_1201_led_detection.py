@@ -1,3 +1,12 @@
+'''
+# Team ID:          < TLD#1201 >
+# Theme:            < Luminosity Drone (LD) >
+# Author List:      < Rolwin Cardoza, Rohith Vishnu Achari >
+# Filename:         < LD_1201_led_detection.py >
+# Functions:        <  >
+# Global variables: <  >
+'''
+
 # import the necessary packages
 from imutils import contours
 from skimage import measure
@@ -9,19 +18,19 @@ import cv2
 image = cv2.imread('led.jpg', 1)
 
 # convert it to grayscale, and blur it
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-blurred = cv2.GaussianBlur(gray, (11, 11), 0)
+gray_scale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+blurred_image = cv2.GaussianBlur(gray_scale, (11, 11), 0)
 
 # threshold the image to reveal light regions in the blurred image
-thresh = cv2.threshold(blurred, 200, 255, cv2.THRESH_BINARY)[1]
+threshold = cv2.threshold(blurred_image, 175, 195, cv2.THRESH_BINARY)[1]
 
 # perform a series of erosions and dilations to remove any small blobs of noise from the thresholded image
-thresh = cv2.erode(thresh, None, iterations=2)
-thresh = cv2.dilate(thresh, None, iterations=4)
+threshold = cv2.erode(threshold, None, iterations=2)
+threshold = cv2.dilate(threshold, None, iterations=4)
 
 # perform a connected component analysis on the thresholded image
-labels = measure.label(thresh, connectivity=2, background=0)
-mask = np.zeros(thresh.shape, dtype="uint8")
+labels = measure.label(threshold, connectivity=2, background=0)
+mask = np.zeros(threshold.shape, dtype="uint8")
 
 # loop over the unique components
 for label in np.unique(labels):
@@ -30,7 +39,7 @@ for label in np.unique(labels):
         continue
 
     # otherwise, construct the label mask and count the number of pixels 
-    labelMask = np.zeros(thresh.shape, dtype="uint8")
+    labelMask = np.zeros(threshold.shape, dtype="uint8")
     labelMask[labels == label] = 255
     numPixels = cv2.countNonZero(labelMask)
 
