@@ -76,7 +76,10 @@ class SwiftDroneController():
 
     def whycon_callback(self, msg):
         self.drone_position[0] = msg.poses[0].position.x
-        # Update other coordinates as needed
+        # Update the y coordinate
+        self.drone_position[1] = msg.poses[0].position.y
+        # Update the z coordinate
+        self.drone_position[2] = msg.poses[0].position.z
 
     def altitude_set_pid(self, alt):
         self.Kp[2] = alt.Kp * 0.06
