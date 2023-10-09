@@ -85,11 +85,11 @@ class swift():
 
 
 		# Publishing /drone_command, /alt_error, /pitch_error, /roll_error
-		self.command_pub = rospy.Publisher('/drone_command', swift_msgs, queue_size=1)
+		self.pub_drone = rospy.Publisher('/drone_command', swift_msgs, queue_size=1)
 		#------------------------Add other ROS Publishers here-----------------------------------------------------
-
-
-
+		self.pub_alt_error = rospy.Publisher('/alt_error', swift_msgs, queue_size=1)
+		self.pub_pitch_error = rospy.Publisher('/pitch_error', swift_msgs, queue_size=1)
+		self.pub_roll_error = rospy.Publisher('/roll_error	', swift_msgs, queue_size=1)
 
 
 
@@ -100,8 +100,8 @@ class swift():
 		rospy.Subscriber('whycon/poses', PoseArray, self.whycon_callback)
 		rospy.Subscriber('/pid_tuning_altitude',PidTune,self.altitude_set_pid)
 		#-------------------------Add other ROS Subscribers here----------------------------------------------------
-
-
+		rospy.Subscriber('/pid_tuning_pitch',PidTune,self.pitch_set_pid)
+		rospy.Subscriber('/pid_tuning_roll',PidTune,self.roll_set_pid)
 
 
 		#------------------------------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ class swift():
 	# Disarming condition of the drone
 	def disarm(self):
 		self.cmd.rcAUX4 = 1100
-		self.command_pub.publish(self.cmd)
+		self.pub_drone.publish(self.cmd)
 		rospy.sleep(1)
 
 
@@ -126,10 +126,8 @@ class swift():
 		self.cmd.rcPitch = 1500
 		self.cmd.rcThrottle = 1000
 		self.cmd.rcAUX4 = 1500
-		self.command_pub.publish(self.cmd)	# Publishing /drone_command
+		self.pub_drone.publish(self.cmd)	# Publishing /drone_command
 		rospy.sleep(1)
-
-
 
 	# Whycon callback function
 	# The function gets executed each time when /whycon node publishes /whycon/poses 
@@ -153,17 +151,16 @@ class swift():
 		self.Kd[2] = alt.Kd * 0.3
 		
 	#----------------------------Define callback function like altitide_set_pid to tune pitch, roll--------------
+	def altitude_set_pitch(self,alt):
+		self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
+		self.Ki[2] = alt.Ki * 0.0008
+		self.Kd[2] = alt.Kd * 0.3
 
 
-
-
-
-
-
-
-
-
-
+	def altitude_set_roll(self,alt):
+			self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
+			self.Ki[2] = alt.Ki * 0.0008
+			self.Kd[2] = alt.Kd * 0.3
 
 	#----------------------------------------------------------------------------------------------------------------------
 
@@ -199,7 +196,7 @@ class swift():
 
 
 	#------------------------------------------------------------------------------------------------------------------------
-		self.command_pub.publish(self.cmd)
+		self.pub_drone.publish(self.cmd)
 		
 
 
