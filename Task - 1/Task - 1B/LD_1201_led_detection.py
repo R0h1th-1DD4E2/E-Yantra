@@ -68,7 +68,7 @@ for i, c in enumerate(cnts):
 
         # Draw the bright spot on the image
         cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-        cv2.circle(image, (cX, cY), 7, (0, 0, 255), -1)
+        cv2.putText(image,f"LED {i+1}",(cX - 20, cY - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,0,0),2)
 
 # Save the output image as a PNG file
 cv2.imwrite("led_detection_results.png", image)
