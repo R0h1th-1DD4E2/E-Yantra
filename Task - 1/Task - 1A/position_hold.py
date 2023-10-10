@@ -87,9 +87,9 @@ class swift():
 		# Publishing /drone_command, /alt_error, /pitch_error, /roll_error
 		self.pub_drone = rospy.Publisher('/drone_command', swift_msgs, queue_size=1)
 		#------------------------Add other ROS Publishers here-----------------------------------------------------
-		self.pub_alt_error = rospy.Publisher('/alt_error', swift_msgs, queue_size=1)
-		self.pub_pitch_error = rospy.Publisher('/pitch_error', swift_msgs, queue_size=1)
-		self.pub_roll_error = rospy.Publisher('/roll_error	', swift_msgs, queue_size=1)
+		self.pub_alt_error = rospy.Publisher('/alt_error', Float64, queue_size=1)
+		self.pub_pitch_error = rospy.Publisher('/pitch_error', Float64, queue_size=1)
+		self.pub_roll_error = rospy.Publisher('/roll_error	', Float64, queue_size=1)
 
 
 
@@ -151,13 +151,13 @@ class swift():
 		self.Kd[2] = alt.Kd * 0.3
 		
 	#----------------------------Define callback function like altitide_set_pid to tune pitch, roll--------------
-	def altitude_set_pitch(self,alt):
+	def pitch_set_pid(self,alt):
 		self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
 		self.Ki[2] = alt.Ki * 0.0008
 		self.Kd[2] = alt.Kd * 0.3
 
 
-	def altitude_set_roll(self,alt):
+	def roll_set_pid(self,alt):
 			self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
 			self.Ki[2] = alt.Ki * 0.0008
 			self.Kd[2] = alt.Kd * 0.3
@@ -177,7 +177,9 @@ class swift():
 	#																														self.cmd.rcPitch = self.max_values[1]
 	#	7. Update previous errors.eg: self.prev_error[1] = error[1] where index 1 corresponds to that of pitch (eg)
 	#	8. Add error_sum
-
+		error = [self.setpoint[i] - self.drone_position[i] for i in range(3)]
+		control_output = [0.0, 0.0, 0.0]
+		
 
 
 

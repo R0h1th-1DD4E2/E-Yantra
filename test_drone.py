@@ -17,9 +17,9 @@ class SwiftDroneController():
         self.setpoint = [2, 2, 20]  # Example setpoint [x, y, z]
 
         # Initialize PID gains
-        self.Kp = [0, 0, 0]
-        self.Ki = [0, 0, 0]
-        self.Kd = [0, 0, 0]
+        self.Kp = [1, 1, 1]
+        self.Ki = [0.001, 0.001, 0.001]
+        self.Kd = [0.1, 0.1, 0.1]
 
         # Initialize other variables for PID control
         self.prev_error = [0, 0, 0]  # Previous errors for [pitch, roll, throttle]
@@ -82,19 +82,19 @@ class SwiftDroneController():
         self.drone_position[2] = msg.poses[0].position.z
 
     def altitude_set_pid(self, alt):
-        self.Kp[2] = alt.Kp * 0.06
-        self.Ki[2] = alt.Ki * 0.0008
-        self.Kd[2] = alt.Kd * 0.3
+        self.Kp[2] = alt.Kp * 0.01
+        self.Ki[2] = alt.Ki * 0.0001
+        self.Kd[2] = alt.Kd * 0.1
 
     def pitch_set_pid(self, pitch):
-        self.Kp[1] = pitch.Kp * 0.06
-        self.Ki[1] = pitch.Ki * 0.0008
-        self.Kd[1] = pitch.Kd * 0.3
+        self.Kp[1] = pitch.Kp * 0.01
+        self.Ki[1] = pitch.Ki * 0.0001
+        self.Kd[1] = pitch.Kd * 0.1
 
     def roll_set_pid(self, roll):
-        self.Kp[0] = roll.Kp * 0.06
-        self.Ki[0] = roll.Ki * 0.0008
-        self.Kd[0] = roll.Kd * 0.3
+        self.Kp[0] = roll.Kp * 0.01
+        self.Ki[0] = roll.Ki * 0.0001
+        self.Kd[0] = roll.Kd * 0.1
 
     def pid(self):
         # Calculate errors for each axis
@@ -134,6 +134,9 @@ class SwiftDroneController():
 
         # Publish the drone command
         self.pub_drone.publish(self.cmd)
+        self.pub_alt_error.publish(self.cmd.rcThrottle)
+        self.pub_pitch_error.publish(self.cmd.rcPitch)
+        self.pub_roll_error.publish(self.cmd.rcRoll)
 
 
 if __name__ == '__main__':
