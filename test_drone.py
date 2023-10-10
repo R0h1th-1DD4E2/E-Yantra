@@ -128,15 +128,16 @@ class SwiftDroneController():
             self.prev_error[axis] = error[axis]
 
         # Update the drone command
-        self.cmd.rcPitch = 1500 + control_output[1]  # Adjust for pitch control
         self.cmd.rcRoll = 1500 + control_output[0]   # Adjust for roll control
+        self.cmd.rcPitch = 1500 + control_output[1]  # Adjust for pitch control
         self.cmd.rcThrottle = 1500 + control_output[2]  # Adjust for throttle control
 
         # Publish the drone command
         self.pub_drone.publish(self.cmd)
-        self.pub_alt_error.publish(self.cmd.rcThrottle)
-        self.pub_pitch_error.publish(self.cmd.rcPitch)
-        self.pub_roll_error.publish(self.cmd.rcRoll)
+        # Publish the error values
+        self.pub_roll_error.publish(error[0])      # Publish roll error
+        self.pub_pitch_error.publish(error[1])    # Publish pitch error
+        self.pub_alt_error.publish(error[2])      # Publish altitude error
 
 
 if __name__ == '__main__':
