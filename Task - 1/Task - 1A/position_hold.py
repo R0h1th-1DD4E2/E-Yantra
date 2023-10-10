@@ -42,7 +42,6 @@ class swift():
 		# [x_setpoint, y_setpoint, z_setpoint]
 		self.setpoint = [2,2,20] # whycon marker at the position of the dummy given in the scene. Make the whycon marker associated with position_to_hold dummy renderable and make changes accordingly
 
-
 		#Declaring a cmd of message type swift_msgs and initializing values
 		self.cmd = swift_msgs()
 		self.cmd.rcRoll = 1500
@@ -54,7 +53,6 @@ class swift():
 		self.cmd.rcAUX3 = 1500
 		self.cmd.rcAUX4 = 1500
 
-
 		#initial setting of Kp, Kd and ki for [roll, pitch, throttle]. eg: self.Kp[2] corresponds to Kp value in throttle axis
 		#after tuning and computing corresponding PID parameters, change the parameters
 
@@ -63,13 +61,15 @@ class swift():
 		self.Kd = [0, 0, 0]
    
 		#-----------------------Add other required variables for pid here ----------------------------------------------
+		# Previous error for each axis
+		self.prev_error = [0.0, 0.0, 0.0]
 
+		# Maximum and minimum RC values for roll, pitch, and throttle
+		self.max_values = [1600, 1600, 1800]
+		self.min_values = [1500, 1500, 1500]
 
-
-
-
-
-
+		# Sample time for PID control (in seconds)
+		self.sampletime = 0.033
 
 
 		# Hint : Add variables for storing previous errors in each axis, like self.prev_error = [0,0,0] where corresponds to [pitch, roll, throttle]		#		 Add variables for limiting the values like self.max_values = [2000,2000,2000] corresponding to [roll, pitch, throttle]
@@ -86,23 +86,24 @@ class swift():
 
 		# Publishing /drone_command, /alt_error, /pitch_error, /roll_error
 		self.pub_drone = rospy.Publisher('/drone_command', swift_msgs, queue_size=1)
+
 		#------------------------Add other ROS Publishers here-----------------------------------------------------
+
 		self.pub_alt_error = rospy.Publisher('/alt_error', Float64, queue_size=1)
 		self.pub_pitch_error = rospy.Publisher('/pitch_error', Float64, queue_size=1)
 		self.pub_roll_error = rospy.Publisher('/roll_error	', Float64, queue_size=1)
 
-
-
 	#-----------------------------------------------------------------------------------------------------------
 
-
 		# Subscribing to /whycon/poses, /pid_tuning_altitude, /pid_tuning_pitch, pid_tuning_roll
+
 		rospy.Subscriber('whycon/poses', PoseArray, self.whycon_callback)
 		rospy.Subscriber('/pid_tuning_altitude',PidTune,self.altitude_set_pid)
+
 		#-------------------------Add other ROS Subscribers here----------------------------------------------------
+
 		rospy.Subscriber('/pid_tuning_pitch',PidTune,self.pitch_set_pid)
 		rospy.Subscriber('/pid_tuning_roll',PidTune,self.roll_set_pid)
-
 
 		#------------------------------------------------------------------------------------------------------------
 
@@ -129,6 +130,7 @@ class swift():
 		self.pub_drone.publish(self.cmd)	# Publishing /drone_command
 		rospy.sleep(1)
 
+
 	# Whycon callback function
 	# The function gets executed each time when /whycon node publishes /whycon/poses 
 	def whycon_callback(self,msg):
@@ -136,11 +138,10 @@ class swift():
 
 		#--------------------Set the remaining co-ordinates of the drone from msg----------------------------------------------
 
-
-
+		self.drone_position[1] = msg.poses[0].position.y
+		self.drone_position[2] = msg.poses[0].position.z
 	
 		#---------------------------------------------------------------------------------------------------------------
-
 
 
 	# Callback function for /pid_tuning_altitude
@@ -149,18 +150,20 @@ class swift():
 		self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
 		self.Ki[2] = alt.Ki * 0.0008
 		self.Kd[2] = alt.Kd * 0.3
-		
+
+
 	#----------------------------Define callback function like altitide_set_pid to tune pitch, roll--------------
 	def pitch_set_pid(self,alt):
-		self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
-		self.Ki[2] = alt.Ki * 0.0008
-		self.Kd[2] = alt.Kd * 0.3
+		self.Kp[0] = alt.Kp * 0.06 
+		self.Ki[0] = alt.Ki * 0.0008
+		self.Kd[0] = alt.Kd * 0.3
 
 
 	def roll_set_pid(self,alt):
-			self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
-			self.Ki[2] = alt.Ki * 0.0008
-			self.Kd[2] = alt.Kd * 0.3
+		self.Kp[1] = alt.Kp * 0.06 
+		self.Ki[1] = alt.Ki * 0.0008
+		self.Kd[1] = alt.Kd * 0.3
+
 
 	#----------------------------------------------------------------------------------------------------------------------
 
@@ -177,40 +180,51 @@ class swift():
 	#																														self.cmd.rcPitch = self.max_values[1]
 	#	7. Update previous errors.eg: self.prev_error[1] = error[1] where index 1 corresponds to that of pitch (eg)
 	#	8. Add error_sum
-		error = [self.setpoint[i] - self.drone_position[i] for i in range(3)]
-		control_output = [0.0, 0.0, 0.0]
+
+		error = [self.drone_position[i] - self.setpoint[i] for i in range(3)]
+		pid_output = [0, 0, 0]
+
+		for i in range(3):
+            # Calculate proportional term
+			P = self.Kp[i] * error[i]
+
+			# Calculate integral term (sum of errors)
+			self.prev_error[i] += error[i]
+			I = self.Ki[i] * self.prev_error[i]
+
+			# Calculate derivative term (change in error)
+			D = self.Kd[i] * (error[i] - self.prev_error[i])
+			
+			# Calculate PID output
+			pid_output[i] = P + I + D	
+
+			# Limit PID output within the specified range
+			if pid_output[i] > self.max_values[i]:
+				pid_output[i] = self.max_values[i]
+			elif pid_output[i] < self.min_values[i]:
+				pid_output[i] = self.min_values[i]
+
+		# Publish PID output as drone commands (SwiftMsg)
+		self.cmd.rcRoll = 1500 + int(pid_output[1])  # Roll control
+		self.cmd.rcPitch = 1500 + int(pid_output[0])  # Pitch control
+		self.cmd.rcThrottle = 1500 + int(pid_output[2])  # Throttle control
+		self.pub_drone.publish(self.cmd)	
+
+		# Publish error values
+		self.pub_alt_error.publish(error[2])
+		self.pub_pitch_error.publish(error[0])
+		self.pub_roll_error.publish(error[1])		
 		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 	#------------------------------------------------------------------------------------------------------------------------
 		self.pub_drone.publish(self.cmd)
 		
 
-
-
-
-
-
-
 if __name__ == '__main__':
 
 	swift_drone = swift()
-	r = rospy.Rate() #specify rate in Hz based upon your desired PID sampling time, i.e. if desired sample time is 33ms specify rate as 30Hz
+	r = rospy.Rate(1/swift_drone.sampletime) #specify rate in Hz based upon your desired PID sampling time, i.e. if desired sample time is 33ms specify rate as 30Hz
 	while not rospy.is_shutdown():
 		swift_drone.pid()
 		r.sleep()
