@@ -82,17 +82,17 @@ class SwiftDroneController():
         self.drone_position[2] = msg.poses[0].position.z
 
     def altitude_set_pid(self, alt):
-        self.Kp[2] = alt.Kp * 0.01
+        self.Kp[2] = alt.Kp * 1
         self.Ki[2] = alt.Ki * 0.0001
         self.Kd[2] = alt.Kd * 0.1
 
     def pitch_set_pid(self, pitch):
-        self.Kp[1] = pitch.Kp * 0.01
+        self.Kp[1] = pitch.Kp * 1
         self.Ki[1] = pitch.Ki * 0.0001
         self.Kd[1] = pitch.Kd * 0.1
 
     def roll_set_pid(self, roll):
-        self.Kp[0] = roll.Kp * 0.01
+        self.Kp[0] = roll.Kp * 1
         self.Ki[0] = roll.Ki * 0.0001
         self.Kd[0] = roll.Kd * 0.1
 
@@ -128,9 +128,9 @@ class SwiftDroneController():
             self.prev_error[axis] = error[axis]
 
         # Update the drone command
-        self.cmd.rcRoll = 1500 + control_output[0]   # Adjust for roll control
-        self.cmd.rcPitch = 1500 + control_output[1]  # Adjust for pitch control
-        self.cmd.rcThrottle = 1500 + control_output[2]  # Adjust for throttle control
+        self.cmd.rcRoll = control_output[0]   # Adjust for roll control
+        self.cmd.rcPitch = control_output[1]  # Adjust for pitch control
+        self.cmd.rcThrottle = control_output[2]  # Adjust for throttle control
 
         # Publish the drone command
         self.pub_drone.publish(self.cmd)

@@ -56,9 +56,9 @@ class swift():
 		#initial setting of Kp, Kd and ki for [roll, pitch, throttle]. eg: self.Kp[2] corresponds to Kp value in throttle axis
 		#after tuning and computing corresponding PID parameters, change the parameters
 
-		self.Kp = [0, 0, 0]
-		self.Ki = [0, 0, 0]
-		self.Kd = [0, 0, 0]
+		self.Kp = [26, 10, 102]
+		self.Ki = [1.3, 0, 6.6]
+		self.Kd = [54.75, 5, 3074.4]
    
 		#-----------------------Add other required variables for pid here ----------------------------------------------
 		# Previous error for each axis
@@ -66,23 +66,10 @@ class swift():
 
 		# Maximum and minimum RC values for roll, pitch, and throttle
 		self.max_values = [1600, 1600, 1800]
-		self.min_values = [1500, 1500, 1500]
+		self.min_values = [1400, 1400, 1500]
 
 		# Sample time for PID control (in seconds)
 		self.sampletime = 0.033
-
-
-		# Hint : Add variables for storing previous errors in each axis, like self.prev_error = [0,0,0] where corresponds to [pitch, roll, throttle]		#		 Add variables for limiting the values like self.max_values = [2000,2000,2000] corresponding to [roll, pitch, throttle]
-		#													self.min_values = [1000,1000,1000] corresponding to [pitch, roll, throttle]
-		#																	You can change the upper limit and lower limit accordingly. 
-		#----------------------------------------------------------------------------------------------------------
-
-		# # This is the sample time in which you need to run pid. Choose any time which you seem fit. Remember the stimulation step time is 50 ms
-		# self.sample_time = 0.060 # in seconds
-
-
-
-
 
 		# Publishing /drone_command, /alt_error, /pitch_error, /roll_error
 		self.pub_drone = rospy.Publisher('/drone_command', swift_msgs, queue_size=1)
@@ -91,7 +78,7 @@ class swift():
 
 		self.pub_alt_error = rospy.Publisher('/alt_error', Float64, queue_size=1)
 		self.pub_pitch_error = rospy.Publisher('/pitch_error', Float64, queue_size=1)
-		self.pub_roll_error = rospy.Publisher('/roll_error	', Float64, queue_size=1)
+		self.pub_roll_error = rospy.Publisher('/roll_error', Float64, queue_size=1)
 
 	#-----------------------------------------------------------------------------------------------------------
 
@@ -144,78 +131,87 @@ class swift():
 		#---------------------------------------------------------------------------------------------------------------
 
 
-	# Callback function for /pid_tuning_altitude
-	# This function gets executed each time when /tune_pid publishes /pid_tuning_altitude
 	def altitude_set_pid(self,alt):
-		self.Kp[2] = alt.Kp * 0.06 # This is just for an example. You can change the ratio/fraction value accordingly
-		self.Ki[2] = alt.Ki * 0.0008
-		self.Kd[2] = alt.Kd * 0.3
+		self.Kp[2] = alt.Kp * 1 # This is just for an example. You can change the ratio/fraction value accordingly
+		self.Ki[2] = alt.Ki * 0.05
+		self.Kd[2] = alt.Kd * 0.8
 
 
 	#----------------------------Define callback function like altitide_set_pid to tune pitch, roll--------------
 	def pitch_set_pid(self,alt):
-		self.Kp[0] = alt.Kp * 0.06 
-		self.Ki[0] = alt.Ki * 0.0008
-		self.Kd[0] = alt.Kd * 0.3
+		self.Kp[1] = alt.Kp * 0.5
+		self.Ki[1] = alt.Ki * 0.025
+		self.Kd[1] = alt.Kd * 0.5
 
 
 	def roll_set_pid(self,alt):
-		self.Kp[1] = alt.Kp * 0.06 
-		self.Ki[1] = alt.Ki * 0.0008
-		self.Kd[1] = alt.Kd * 0.3
+		self.Kp[0] = alt.Kp * 1
+		self.Ki[0] = alt.Ki * 0.05
+		self.Kd[0] = alt.Kd * 0.75
 
 
 	#----------------------------------------------------------------------------------------------------------------------
 
 	def pid(self):
+
 	#-----------------------------Write the PID algorithm here--------------------------------------------------------------
 
-	# Steps:
-	# 	1. Compute error in each axis. eg: error[0] = self.drone_position[0] - self.setpoint[0] ,where error[0] corresponds to error in x...
-	#	2. Compute the error (for proportional), change in error (for derivative) and sum of errors (for integral) in each axis. Refer "Understanding PID.pdf" to understand PID equation.
-	#	3. Calculate the pid output required for each axis. For eg: calcuate self.out_roll, self.out_pitch, etc.
-	#	4. Reduce or add this computed output value on the avg value ie 1500. For eg: self.cmd.rcRoll = 1500 + self.out_roll. LOOK OUT FOR SIGN (+ or -). EXPERIMENT AND FIND THE CORRECT SIGN
-	#	5. Don't run the pid continously. Run the pid only at the a sample time. self.sampletime defined above is for this purpose. THIS IS VERY IMPORTANT.
-	#	6. Limit the output value and the final command value between the maximum(2000) and minimum(1000)range before publishing. For eg : if self.cmd.rcPitch > self.max_values[1]:
-	#																														self.cmd.rcPitch = self.max_values[1]
-	#	7. Update previous errors.eg: self.prev_error[1] = error[1] where index 1 corresponds to that of pitch (eg)
-	#	8. Add error_sum
-
 		error = [self.drone_position[i] - self.setpoint[i] for i in range(3)]
-		pid_output = [0, 0, 0]
 
-		for i in range(3):
-            # Calculate proportional term
-			P = self.Kp[i] * error[i]
+		iterm = [0,0,0]
 
-			# Calculate integral term (sum of errors)
-			self.prev_error[i] += error[i]
-			I = self.Ki[i] * self.prev_error[i]
+		#Calculating For throttle
+		tP = self.Kp[2] * error[2]
+		tI = self.Ki[2] * iterm[2]
+		tD = self.Kd[2] * (error[2] - self.prev_error[2])
 
-			# Calculate derivative term (change in error)
-			D = self.Kd[i] * (error[i] - self.prev_error[i])
-			
-			# Calculate PID output
-			pid_output[i] = P + I + D	
+		throttle = 1500 + int(tP + tI + tD)
+		if throttle > self.max_values[2]:
+			throttle = self.max_values[2]
+		elif throttle < self.min_values[2]:
+			throttle = self.min_values[2]
+		
+		self.prev_error[2] = error[2]
+		iterm[2] += error[2]
 
-			# Limit PID output within the specified range
-			if pid_output[i] > self.max_values[i]:
-				pid_output[i] = self.max_values[i]
-			elif pid_output[i] < self.min_values[i]:
-				pid_output[i] = self.min_values[i]
+		#Calculating For roll
+		rP = self.Kp[0] * error[0]
+		rI = self.Ki[0] * iterm[0]
+		rD = self.Kd[0] * (error[0] - self.prev_error[0])
+
+		roll = 1500 - int(rP + rI + rD)
+		if roll > self.max_values[0]:
+			roll = self.max_values[0]
+		elif roll < self.min_values[0]:
+			roll = self.min_values[0]
+				
+		self.prev_error[0] = error[0]
+		iterm[0] += error[0]
+
+		#Calculating For pitch
+		pP = self.Kp[1] * error[1]
+		pI = self.Ki[1] * iterm[1]
+		pD = self.Kd[1] * (error[1] - self.prev_error[1])
+
+		pitch = 1500 + int(pP + pI + pD)
+		if pitch > self.max_values[1]:
+			pitch = self.max_values[1]
+		elif pitch < self.min_values[1]:
+			pitch = self.min_values[1]
+		
+		self.prev_error[1] = error[1]
+		iterm[1] += error[1]
 
 		# Publish PID output as drone commands (SwiftMsg)
-		self.cmd.rcRoll = 1500 + int(pid_output[1])  # Roll control
-		self.cmd.rcPitch = 1500 + int(pid_output[0])  # Pitch control
-		self.cmd.rcThrottle = 1500 + int(pid_output[2])  # Throttle control
+		self.cmd.rcRoll = int(roll)  # Roll control
+		self.cmd.rcPitch = int(pitch)  # Pitch control
+		self.cmd.rcThrottle = int(throttle)  # Throttle control
 		self.pub_drone.publish(self.cmd)	
 
 		# Publish error values
 		self.pub_alt_error.publish(error[2])
 		self.pub_pitch_error.publish(error[0])
 		self.pub_roll_error.publish(error[1])		
-		
-
 
 	#------------------------------------------------------------------------------------------------------------------------
 		self.pub_drone.publish(self.cmd)
