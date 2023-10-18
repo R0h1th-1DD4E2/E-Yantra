@@ -56,9 +56,9 @@ class swift():
 		#initial setting of Kp, Kd and ki for [roll, pitch, throttle]. eg: self.Kp[2] corresponds to Kp value in throttle axis
 		#after tuning and computing corresponding PID parameters, change the parameters
 
-		self.Kp = [26, 10, 102]
+		self.Kp = [50, 55, 102]
 		self.Ki = [1.3, 0, 6.6]
-		self.Kd = [54.75, 5, 3074.4]
+		self.Kd = [686.25, 562.5, 3074.4]
    
 		#-----------------------Add other required variables for pid here ----------------------------------------------
 		# Previous error for each axis
@@ -210,8 +210,8 @@ class swift():
 
 		# Publish error values
 		self.pub_alt_error.publish(error[2])
-		self.pub_pitch_error.publish(error[0])
-		self.pub_roll_error.publish(error[1])		
+		self.pub_pitch_error.publish(error[1])
+		self.pub_roll_error.publish(error[0])		
 
 	#------------------------------------------------------------------------------------------------------------------------
 		self.pub_drone.publish(self.cmd)
