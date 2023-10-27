@@ -165,7 +165,7 @@ class swift():
 		tI = self.Ki[2] * iterm[2]
 		tD = self.Kd[2] * (error[2] - self.prev_error[2])
 
-		throttle = 1500 + int(tP + tI + tD)
+		throttle = 1590 + int(tP + tI + tD)
 		if throttle > self.max_values[2]:
 			throttle = self.max_values[2]
 		elif throttle < self.min_values[2]:
