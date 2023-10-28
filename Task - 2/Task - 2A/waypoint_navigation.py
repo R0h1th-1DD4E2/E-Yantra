@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from swift_msgs.msg import *
 from geometry_msgs.msg import PoseArray
 from std_msgs.msg import Int16
