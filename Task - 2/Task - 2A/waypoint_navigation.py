@@ -33,12 +33,12 @@ class swift():
 
 		self.Kp = [50, 55, 102]
 		self.Ki = [1.3, 0, 6.6]
-		self.Kd = [686.25, 562.5, 3074.4]
+		self.Kd = [686.25, 562.5, 2850]
    
 		#-----------------------Add other required variables for pid here ----------------------------------------------
 		# Previous error for each axis
 		self.prev_error = [0.0, 0.0, 0.0]
-		self.toleranc = [0.2, 0.2, 0.2]
+		self.tolerance = [0.2, 0.2, 0.2]
 
 		# Maximum and minimum RC values for roll, pitch, and throttle
 		self.max_values = [1600, 1600, 1800]
@@ -118,7 +118,7 @@ class swift():
 
 	#----------------------------------------------------------------------------------------------------------------------
 
-	def pid(self, setpoint: list[int]):
+	def pid(self, setpoint):
 
 		error = [self.drone_position[i] - setpoint[i] for i in range(3)]
 
